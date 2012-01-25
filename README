@@ -1,2 +1,8 @@
-O spellbook é uma framework para desenvolvimento de aplicações web em php.
-Este projecto foi desenvolvido na WIZ por Nuno Ferreira e mais tarde também por Jorge Pena.
+"sbook" (short for spellbook) it's a kind of minimal framework for web application development in PHP.
+It was developed initially by Nuno Ferreira at Wiz Interactive and later joined by Jorge Pena.
+
+Nowadays its continually being updated, still at Wiz Interactive, as work demands. 
+
+Although it's rather obsolete compared to almost all PHP frameworks out there, and most of it is still 
+using PHP 4 code and very heavy libs like PEAR/MDB2 and is hopelessly undocumented, it gets the job 
+done and works all over the place be it Linux or Windows, PHP 4 or 5, MySQL 4 or 5.
