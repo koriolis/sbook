@@ -23,6 +23,7 @@ Thumbs.db
 .hg
 .svn
 .CVS
+_cache
 
 # build script local files
 build/buildinfo.properties

@@ -122,7 +122,7 @@ class Template
 		//
 		if(is_array($this->_template_vars['global_css']) && count($this->_template_vars['global_css'])>0){
 
-			$files = array_values($this->_template_vars['css']);
+			$files = array_values($this->_template_vars['global_css']);
 			// Get last-modified times from files
 			foreach($files as $i=>$file) {
 				if(is_file(TEMPLATES.$file)) {
