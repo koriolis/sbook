@@ -1,0 +1,7 @@
+$(function(){
+
+	/* Global Doc Ready */
+
+});
+
+

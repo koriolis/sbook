@@ -1,0 +1,159 @@
+<IfModule mod_headers.c>
+# Because X-UA-Compatible isn't sent to non-IE (to save header bytes),
+#   We need to inform proxies that content changes based on UA 
+	Header append Vary User-Agent
+# Cache control is set only if mod_headers is enabled, so that's unncessary to declare
+</IfModule>
+
+# allow access from all domains for webfonts
+# alternatively you could only whitelist
+#   your subdomains like "sub.domain.com"
+<FilesMatch "\.(ttf|otf|eot|woff|font.css)$">
+	<IfModule mod_headers.c>
+		Header set Access-Control-Allow-Origin "*"
+	</IfModule>
+</FilesMatch>
+
+
+# video
+AddType video/ogg                      ogg ogv
+AddType video/mp4                      mp4
+AddType video/webm                     webm
+
+# Proper svg serving. Required for svg webfonts on iPad
+#   twitter.com/FontSquirrel/status/14855840545
+AddType     image/svg+xml              svg svgz 
+AddEncoding gzip                       svgz
+
+# webfonts                             
+AddType application/vnd.ms-fontobject  eot
+AddType font/truetype                  ttf
+AddType font/opentype                  otf
+AddType font/woff                      woff
+
+# assorted types                                      
+AddType image/vnd.microsoft.icon       ico
+AddType image/webp                     webp
+AddType text/cache-manifest            manifest
+AddType text/x-component               htc
+AddType application/x-chrome-extension crx
+
+# gzip compression.
+<IfModule mod_deflate.c>
+	# html, txt, css, js, json, xml, htc:
+	AddOutputFilterByType DEFLATE text/html text/plain text/css application/json
+	AddOutputFilterByType DEFLATE text/javascript application/javascript application/x-javascript
+	AddOutputFilterByType DEFLATE text/xml application/xml text/x-component
+
+	# webfonts and svg:
+	<FilesMatch "\.(ttf|otf|eot|svg)$" >
+		SetOutputFilter DEFLATE
+	</FilesMatch>
+	
+</IfModule>
+
+# gzip compression for old mod_gzip
+<IfModule mod_gzip.c>
+	mod_gzip_on                   Yes
+	mod_gzip_item_include         file       \.php$
+	mod_gzip_item_include         file       \.html$
+	mod_gzip_item_include         file       \.js$
+	mod_gzip_item_include         file       \.css$
+	mod_gzip_item_include         mime       ^text/html$
+  	mod_gzip_item_include         mime       ^text/plain$
+  	mod_gzip_item_include         mime       ^text/css$
+  	mod_gzip_item_include         mime       ^text/javascript$
+  	mod_gzip_item_include         mime       ^text/ecmascript$
+  	mod_gzip_item_include         mime       ^text/x-component$
+  	mod_gzip_item_include         mime       ^application/x-javascript$
+  	mod_gzip_item_include         mime       ^application/javascript$
+  	mod_gzip_item_include         mime       ^application/json$
+  	mod_gzip_item_include         mime       ^application/xml$
+  	mod_gzip_dechunk              Yes
+</IfModule>
+
+<IfModule mod_expires.c>
+	Header set Cache-Control "public"
+	ExpiresActive on
+	ExpiresDefault							"access plus 1 month"
+	
+# cache.manifest needs re-requests in FF 3.6
+	ExpiresByType text/cache-manifest       "access plus 0 seconds"
+
+# document html 
+	ExpiresByType text/html                 "access plus 0 seconds"
+
+# data
+	ExpiresByType text/xml                  "access plus 0 seconds"
+	ExpiresByType application/xml           "access plus 0 seconds"
+	ExpiresByType application/json          "access plus 0 seconds"
+
+# rss feed
+	ExpiresByType application/rss+xml		"access plus 1 hour"
+
+# favicon (cannot be renamed)
+  ExpiresByType image/vnd.microsoft.icon	"access plus 1 week"
+
+# media: images, video, audio
+  ExpiresByType image/gif                 "access plus 1 month"
+  ExpiresByType image/png                 "access plus 1 month"
+  ExpiresByType image/jpg                 "access plus 1 month"
+  ExpiresByType image/jpeg                "access plus 1 month"
+  ExpiresByType video/ogg                 "access plus 1 month"
+  ExpiresByType audio/ogg                 "access plus 1 month"
+  ExpiresByType video/mp4                 "access plus 1 month"
+  ExpiresByType video/webm                "access plus 1 month"
+  
+# webfonts
+  ExpiresByType font/truetype             "access plus 1 month"
+  ExpiresByType font/opentype             "access plus 1 month"
+  ExpiresByType font/woff                 "access plus 1 month"
+  ExpiresByType image/svg+xml             "access plus 1 month"
+  ExpiresByType application/vnd.ms-fontobject "access plus 1 month"  
+
+# css and javascript
+  #ExpiresByType text/css                  "access plus 1 month"
+  #ExpiresByType application/javascript    "access plus 1 month"
+  #ExpiresByType text/javascript           "access plus 1 month"
+</IfModule>
+
+# Site performance Optimization (ver: http://developer.yahoo.com/performance/rules.html#etags)
+FileETag none
+
+# without -MultiViews, Apache will give a 404 for a rewrite if a folder of the same name does not exist 
+#   e.g. /blog/hello : webmasterworld.com/apache/3808792.htm
+Options -MultiViews 
+
+php_value max_input_time 240
+php_value post_max_size 20M
+php_value upload_max_filesize 20M
+
+# custom 404 page
+# ErrorDocument 404 /404.html
+
+# use utf-8 encoding for anything served text/plain or text/html
+# AddDefaultCharset On
+AddDefaultCharset ISO-8859-1
+
+# force utf-8 for a number of file formats
+# AddCharset utf-8 .html .css .js .xml .json .rss
+# AddDefaultCharset ISO-8859-1 .html .css .js .xml .json .rss
+
+# We don't need to tell everyone we're apache.
+ServerSignature Off
+
+<IfModule mod_rewrite.c>
+    RewriteEngine on
+
+# Base URI for all rewritten urls
+# if sBook is inside a folder you need to change this. Ex: RewriteBase /gourmet
+    RewriteBase /
+
+    # Prevent access to any file inside the sbook folder
+    RewriteRule ^sbook/(.*)$ [f]
+	RewriteRule ^blog(.*)$ - [last]
+	
+	# Rewrite all requests to sbook
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+</IfModule>

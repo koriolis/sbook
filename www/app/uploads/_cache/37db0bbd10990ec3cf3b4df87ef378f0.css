@@ -1,0 +1,30 @@
+#body-noticias
+#main{padding-bottom:195px}#body-noticias
+div.noticiaContainer{width:222px;height:285px;float:left;margin-right:4px;position:relative;overflow:hidden;margin-bottom:20px}#body-noticias div.noticiaContainer
+div.moldura{background:transparent url(/app/templates/img/noticias/moldura_noticia.png) no-repeat top left;width:209px;height:139px;padding-top:12px;padding-left:13px}#body-noticias div.noticiaContainer
+h5{font-size:14px;color:#000;font-weight:bold;margin-left:4px;margin-top:10px}#body-noticias div.noticiaContainer
+h6{font-size:11px;color:#636363;font-weight:regular;margin-left:4px;margin-top:7px;margin-bottom:10px}#body-noticias div.noticiaContainer
+a{margin-left:4px;display:block;text-decoration:none;font-size:11px;color:#6eb90d;font-weight:bold;line-height:21px}#body-noticias div.noticiaContainer a>span{color:#636363;font-weight:regular}#body-noticias div.noticiaContainer>img.linha{position:absolute;bottom:0;left:4px}#body-noticias-detalhe
+#main{padding-bottom:195px}#body-noticias-detalhe #innerContainer
+h4{margin-top:24px}#body-noticias-detalhe
+p.local_data{margin-top:4px}#body-noticias-detalhe
+div.corpoNoticia{margin-top:15px}#body-noticias-detalhe div.corpoNoticia
+p{margin:0}#body-noticias-detalhe div.corpoNoticia
+a{text-decoration:none;color:#6eb90d}#body-noticias-detalhe
+div.moldura_top{margin-top:28px;width:258px;height:12px;background:transparent url(/app/templates/img/noticias/moldura_top.png) no-repeat top left}#body-noticias-detalhe
+div.moldura_bottom{width:258px;height:11px;background:transparent url(/app/templates/img/noticias/moldura_bottom.png) no-repeat top left}#body-noticias-detalhe
+div.moldura_fill{width:246px;padding-left:12px;background:transparent url(/app/templates/img/noticias/moldura_fill.png) repeat-y}#innerContainer div.menuArea ul>li.menu_kit{height:114px}#innerContainer div.menuArea ul > li.menu_kit ul
+li{font-size:13px;color:#000;font-weight:bold;border-bottom:none;width:auto;height:auto;line-height:20px;padding:0}#innerContainer div.menuArea ul > li.menu_kit ul
+li.first{margin-top:6px}#innerContainer div.menuArea ul > li.menu_kit ul li
+a{color:#525252}#innerContainer
+h3.comlinha{padding-bottom:7px;border-bottom-style:solid;border-bottom-width:1px;border-bottom-color:#e5e5e5}#innerContainer div.textoArea
+div.logo{margin-top:12px;height:260px;margin-right:4px;float:left;width:222px}#innerContainer div.textoArea div.logo:nth-child(odd){margin-right:0}#innerContainer div.textoArea div.logo>span{font-size:14px;font-weight:bold;color:#000;margin-left:5px;display:block;margin-bottom:4px}#body-noticias div.textoArea div.logo
+a{margin-left:4px;display:block;text-decoration:none;font-size:11px;color:#6eb90d;font-weight:bold;line-height:21px}#body-noticias div.textoArea div.logo a>span{color:#636363;font-size:11px;font-weight:500}#body-noticias
+div.noticia_internacional{width:222px;float:left;margin-right:4px;height:304px;position:relative}#body-noticias div.noticia_internacional>div.moldura{background:transparent url(/app/templates/img/noticias/moldura_noticia_internacional.png) no-repeat top left;width:210px;height:139px;padding-left:12px;padding-top:12px}#body-noticias div.noticia_internacional
+div.texto{height:108px;border-bottom-style:solid;border-bottom-width:1px;border-bottom-color:#e5e5e5;overflow:hidden}#body-noticias div.noticia_internacional
+h5{font-size:14px;color:#000;font-weight:bold;margin-left:4px;margin-top:10px}#body-noticias div.noticia_internacional
+h6{font-size:11px;color:#636363;font-weight:regular;margin-left:4px;margin-top:7px;margin-bottom:10px}#body-noticias div.noticia_internacional
+span.data{font-size:11px;color:#000;position:absolute;bottom:26px;left:4px}#body-noticias div.noticia_internacional
+a{font-size:11px;color:#6eb90d;font-weight:bold;position:absolute;bottom:26px;right:4px;text-decoration:none}#body-noticias
+div.pager{clear:both;width:100%;border-top-style:solid;border-top-width:1px;border-top-color:#e5e5e5;margin-top:40px;font-size:11px;font-weight:bold;text-align:right;padding-top:8px}#body-noticias div.pager
+a{color:#6eb90d;text-decoration:none}
