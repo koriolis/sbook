@@ -19,6 +19,7 @@ uses('debug','lessc.inc');
 class Template
 {
 	private $_template_vars;
+    private $_css_vars;
 	public $template_dir;
 
 	public function __construct()
@@ -34,6 +35,11 @@ class Template
 		// Caso ainda não existam as pastas, então criam-se
 		if(!is_dir(UPLOADS)) mkdir(UPLOADS);
 		if(!is_dir(CACHE)) mkdir(CACHE);
+
+		$frontendOptions = array(
+			'lifetime' => 7200, // cache lifetime of 2 hours
+			'automatic_serialization' => false
+		);
 
 	}
 
@@ -51,6 +57,21 @@ class Template
             if ($tpl_var != ''){
                 $this->_template_vars[$tpl_var] = $value;
 			}
+        }
+    }
+
+    public function cssAssign($tpl_var, $value = null)
+    {
+        if (is_array($tpl_var)){
+            foreach ($tpl_var as $key => $val) {
+                if ($key != '') {
+                    $this->_css_vars[$key] = $val;
+                }
+            }
+        } else {
+            if ($tpl_var != ''){
+                $this->_css_vars[$tpl_var] = $value;
+            }
         }
     }
 
@@ -124,6 +145,14 @@ class Template
 
 	public function displayCSS()
 	{
+        /*
+        try {
+            lessc::ccompile('input.less', 'out.css');
+        } catch (exception $ex) {
+            exit('lessc fatal error:<br />'.$ex->getMessage());
+        }
+        */
+
 		// Se existirem ficheiros globais
 		//
 		if(is_array($this->_template_vars['global_css']) && count($this->_template_vars['global_css'])>0){
@@ -143,18 +172,22 @@ class Template
 			if(!is_file($cached_filepath)){
 				$source = array();
 				foreach($files as $i=>$file) {
-					$source[] = file_get_contents(TEMPLATES_URI.$file);
+                    if(is_file(TEMPLATES.$file)) {
+					   $source[] = file_get_contents(TEMPLATES.$file);
+                    }
 				}
-				$source = array_unique($source);
 
-				//$source = $this->compress_css(implode("",$source));
+                //$source = $this->compress_css(implode("",$source));
                 $source = array_unique($source);
                 $less = new lessc(); // a blank lessc
-                $source = $less->parse(implode("\r\n",$source));
-
                 
+                if(is_array($this->_css_vars) && !empty($this->_css_vars)) {
+                    $compiled_source = $less->parse(implode("\r\n",$source), $this->_css_vars);                  
+                } else {
+                    $compiled_source = $less->parse(implode("\r\n",$source));                  
+                }
 
-				file_put_contents($cached_filepath,$source);
+				file_put_contents($cached_filepath,$compiled_source);
 
 				unset($this->_template_vars['css']);
 			}
@@ -180,17 +213,22 @@ class Template
 
 			if(!is_file($cached_filepath)){
 				foreach($files as $i=>$file) {
-					$source[] = file_get_contents(TEMPLATES_URI.$file);
+                    if(is_file(TEMPLATES.$file)) {
+					   $source[] = file_get_contents(TEMPLATES.$file);
+                    }
 				}
 
 				$source = array_unique($source);
                 $less = new lessc(); // a blank lessc
-                $source = $less->parse(implode("\r\n",$source));
-
-
+                
+                if(is_array($this->_css_vars) && !empty($this->_css_vars)) {
+                    $compiled_source = $less->parse(implode("\r\n",$source), $this->_css_vars);                  
+                } else {
+                    $compiled_source = $less->parse(implode("\r\n",$source));                  
+                }
 
 				//$source = $this->compress_css(implode("",$source));
-				file_put_contents($cached_filepath,$source);
+				file_put_contents($cached_filepath,$compiled_source);
 
 				unset($this->_template_vars['css']);
 			}
@@ -334,6 +372,186 @@ class Template
 		}
 	}
 
-	
+	private function compress_css($css)
+	{
+		/*
+		 *  Helper functions for this method
+		 */
+		function _selectorsCB($m)
+		{
+			// remove ws around the combinators
+			return preg_replace('/\\s*([,>+~])\\s*/', '$1', $m[0]);
+		}
+
+		function _commentCB($m)
+		{
+
+			$m = $m[1];
+			// $m is the comment content w/o the surrounding tokens,
+			// but the return value will replace the entire comment.
+			if ($m === 'keep') {
+				return '/**/';
+			}
+			if ($m === '" "') {
+				// component of http://tantek.com/CSS/Examples/midpass.html
+				return '/*" "*/';
+			}
+			if (preg_match('@";\\}\\s*\\}/\\*\\s+@', $m)) {
+				// component of http://tantek.com/CSS/Examples/midpass.html
+				return '/*";}}/* */';
+			}
+
+			if (substr($m, -1) === '\\') { // comment ends like \*/
+				// begin hack mode and preserve hack
+				return '/*\\*/';
+			}
+			if ($m !== '' && $m[0] === '/') { // comment looks like /*/ foo */
+				// begin hack mode and preserve hack
+				return '/*/*/';
+			}
+
+			return ''; // remove all other comments
+		}
+
+		function _fontFamilyCB($m)
+		{
+			$m[1] = preg_replace('/
+					\\s*
+					(
+						"[^"]+"      # 1 = family in double qutoes
+						|\'[^\']+\'  # or 1 = family in single quotes
+						|[\\w\\-]+   # or 1 = unquoted family
+					)
+					\\s*
+				/x', '$1', $m[1]);
+			return 'font-family:' . $m[1] . $m[2];
+		}
+
+		function _urlCB($m)
+		{
+
+			$isImport = (0 === strpos($m[0], '@import'));
+			if ($isImport) {
+				$quote = $m[1];
+				$url = $m[2];
+			} else {
+				// is url()
+				// $m[1] is either quoted or not
+				$quote = ($m[1][0] === "'" || $m[1][0] === '"')
+					? $m[1][0]
+					: '';
+				$url = ($quote === '')
+					? $m[1]
+					: substr($m[1], 1, strlen($m[1]) - 2);
+			}
+			if ('/' !== $url[0]) {
+				if (strpos($url, '//') > 0) {
+					// probably starts with protocol, do not alter
+				} else {
+					// relative URI, rewrite!
+					// rewrite absolute url from scratch!
+					// prepend path with current dir separator (OS-independent)
+
+
+					$path = TEMPLATES.strtr($url, '/', DS);
+
+					// strip doc root
+					$path = substr($path, strlen(realpath(ROOT)));
+
+					// fix to absolute URL
+					$url = strtr($path, DS, '/');
+					// remove /./ and /../ where possible
+					$url = str_replace('/./', '/', $url);
+					$url = str_replace('/../', '/', $url);
+					//$url = substr(BASEURI,0,-1).$url;
+				}
+			}
+			return $isImport
+				? "@import {$quote}{$url}{$quote}"
+				: "url({$quote}{$url}{$quote})";
+		}
+
+		// converter line breaks em line feeds
+		$css = str_replace("\r\n", "\n", $css);
+
+		// preserve empty comment after '>'
+        // http://www.webdevout.net/css-hacks#in_css-selectors
+        $css = preg_replace('@>/\\*\\s*\\*/@', '>/*keep*/', $css);
+
+        // preserve empty comment between property and value
+        // http://css-discuss.incutio.com/?page=BoxModelHack
+        $css = preg_replace('@/\\*\\s*\\*/\\s*:@', '/*keep*/:', $css);
+        $css = preg_replace('@:\\s*/\\*\\s*\\*/@', ':/*keep*/', $css);
+
+         // apply callback to all valid comments (and strip out surrounding ws
+        $css = preg_replace_callback('@\\s*/\\*([\\s\\S]*?)\\*/\\s*@','_commentCB', $css);
+
+         // remove ws around { } and last semicolon in declaration block
+        $css = preg_replace('/\\s*{\\s*/', '{', $css);
+        $css = preg_replace('/;?\\s*}\\s*/', '}', $css);
+
+        // remove ws surrounding semicolons
+		$css = preg_replace('/\\s*;\\s*/', ';', $css);
+
+		// remove ws around urls
+
+        $css = preg_replace('/
+                url\\(      # url(
+                \\s*
+                ([^\\)]+?)  # 1 = the URL (really just a bunch of non right parenthesis)
+                \\s*
+                \\)         # )
+            /x', 'url($1)', $css);
+
+        // remove ws between rules and colons
+        $css = preg_replace('/
+                \\s*
+                ([{;])              # 1 = beginning of block or rule separator
+                \\s*
+                ([\\*_]?[\\w\\-]+)  # 2 = property (and maybe IE filter)
+                \\s*
+                :
+                \\s*
+                (\\b|[#\'"])        # 3 = first character of a value
+            /x', '$1$2:$3', $css);
+        // remove ws in selectors
+        $css = preg_replace_callback('/
+                (?:              # non-capture
+                    \\s*
+                    [^~>+,\\s]+  # selector part
+                    \\s*
+                    [,>+~]       # combinators
+                )+
+                \\s*
+                [^~>+,\\s]+      # selector part
+                {                # open declaration block
+            /x','_selectorsCB', $css);
+        // minimize hex colors
+        $css = preg_replace('/([^=])#([a-f\\d])\\2([a-f\\d])\\3([a-f\\d])\\4([\\s;\\}])/i','$1#$2$3$4$5', $css);
+
+		 // remove spaces between font families
+        $css = preg_replace_callback('/font-family:([^;}]+)([;}])/','_fontFamilyCB', $css);
+		$css = preg_replace('/@import\\s+url/', '@import url', $css);
+
+		// replace any ws involving newlines with a single newline
+        $css = preg_replace('/[ \\t]*\\n+\\s*/', "\n", $css);
+
+        // separate common descendent selectors w/ newlines (to limit line lengths)
+        $css = preg_replace('/([\\w#\\.\\*]+)\\s+([\\w#\\.\\*]+){/', "$1\n$2{", $css);
+
+         // Use newline after 1st numeric value (to limit line lengths).
+        $css = preg_replace('/
+            ((?:padding|margin|border|outline):\\d+(?:px|em)?) # 1 = prop : 1st numeric value
+            \\s+
+            /x'
+            ,"$1\n", $css);
+
+		$css = preg_replace_callback('/@import\\s+([\'"])(.*?)[\'"]/','_urlCB', $css);
+		$css = preg_replace_callback('/url\\(\\s*([^\\)\\s]+)\\s*\\)/','_urlCB', $css);
+
+        return $css;
+
+
+	}
 
 }
