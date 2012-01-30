@@ -723,7 +723,7 @@ class Date {
         '11' => 'Novembro',
         '12' => 'Dezembro'
     );
-    public function __construct($dateString){
+    public function __construct($dateString=null){
         
         if(!empty($dateString)){
             $this->date = getdate(strtotime($dateString));
