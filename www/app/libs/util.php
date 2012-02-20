@@ -787,7 +787,9 @@ class Date {
             $this->date = getdate(mktime());
         }
     }
-
+    /*
+     * $dateString: any string that strtotime understands. i.e. 2012-02-23 for ex.
+     */
     public function between($start_dateString=null, $end_dateString=null){
         $start = Make::a('Date',$start_dateString)->date[0];
         $end   = Make::a('Date',$end_dateString)->date[0];
