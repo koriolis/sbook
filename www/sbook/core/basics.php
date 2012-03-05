@@ -33,6 +33,11 @@
      * Set Include Path for PEAR
      */
     set_include_path('.'.PATH_SEPARATOR.PEAR);
+
+    /**
+     * Set Default Timezone
+     */
+    date_default_timezone_set('Europe/Lisbon');
     
 
     /**
