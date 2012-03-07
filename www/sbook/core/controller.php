@@ -44,44 +44,43 @@ class Controller
     
 	var $tpl;
 	
-	function Controller(){
+	public function Controller(){
 		
-		modules('class.template');
-		$this->tpl = new Template();
-		$this->tpl->template_dir = TEMPLATES;
-		$this->tpl->assign("baseuri",BASEURI);	
+		modules('Template');
+        $this->tpl = new Template();
+        $this->tpl->template_dir = TEMPLATES;
+        $this->tpl->assign("baseuri",BASEURI);	
 	}
 
 
-	function DefaultAction($params) 
+	public function DefaultAction($params) 
 	{
         $this->tpl->template_dir = CORETEMPLATES;
         $this->tpl->display('error_no_site.tpl');
         exit;
 	}
 
-	function Initialize()
+	public function initialize()
 	{
         // runs at the beginning of every request
 	}
 
-	function Finalize()
+	public function finalize()
 	{
         // runs at the end of every request
 	}
 
-	function _redirect($url,$prefix = BASEURI)
+	protected function _redirect($url,$prefix = BASEURI)
 	{
 		header('Location: '.$prefix.$url);
 		exit;
 	}
 
-    function _error_404()
+    public function _error_404()
     {
-    	
+    	header('Not Found', true, 404);
         $this->tpl->template_dir = CORETEMPLATES;
         $this->tpl->display('error_404.tpl');
         exit;
     }
 }
-?>

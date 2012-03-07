@@ -5,7 +5,7 @@
  *
  * @author Nuno Ferreira 
  */
-set_include_path((get_include_path().':'.MODULES));
+
 
 // setup the zend framework autoloader
 //modules('Zend/Loader/Autoloader');
@@ -54,7 +54,7 @@ class controller_main extends controller{
 
 	protected function httpStatus($errorCode = 404)
 	{
-		header('Sogrape Vinhos', true, $errorCode);
+		header('Not Found', true, $errorCode);
 
 		if($errorCode == 404) {
 			$this->tpl->display('404.tpl');

@@ -127,6 +127,7 @@ Options -MultiViews
 php_value max_input_time 240
 php_value post_max_size 20M
 php_value upload_max_filesize 20M
+php_flag html_errors 1
 
 # custom 404 page
 # ErrorDocument 404 /404.html
