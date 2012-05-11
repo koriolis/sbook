@@ -29,6 +29,6 @@ Thumbs.db
 build/buildinfo.properties
 build/config/buildinfo.properties
 
-# Tudo excepto o sample_config.php
-/www/app/config/*
-!/www/app/config/sbook.php
+# Tudo excepto o sbook.php
+app/config/*
+!app/config/sbook.php
