@@ -8,7 +8,6 @@ define('DEFAULT_DSN','mysql://user:password@host/dbname');
 
 define('BASEURI','http://sbook/');
 
-define('TEMPLATES',APP.'templates/');
 define('UPLOADS',APP.'uploads/');
 
 define('TEMPLATES_URI',BASEURI.'app/templates/');
@@ -44,4 +43,23 @@ define('ACCESS_PASS','password');
 define('MAIL_SERVER','mail.wiz.pt');
 define('MAIL_FROM_EMAIL','info@wiz.pt');
 define('MAIL_FROM_NAME','Wiz Interactive');
+
+define('ROUTES','[
+{
+	"pattern":"/",
+	"mapping":{
+		"controller":"main",
+		"action":"index"
+	}
+}
+]');
+
+$sbook_routes = array(
+	'pattern' => '/',
+	'mapping' => array(
+		'controller'=>'main',
+		'action'=>'index'
+    )
+);
+
 ?>

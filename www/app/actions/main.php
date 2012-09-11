@@ -67,4 +67,3 @@ class controller_main extends controller{
 
 
 }
-?>

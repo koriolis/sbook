@@ -32,6 +32,8 @@
 /**
  * TODO 
  */
+uses('debug');
+pear('Net' . DS . 'URL' . DS . 'Mapper');
 require_once(SBOOK.'core/controller.php');
 
 /**
@@ -45,30 +47,33 @@ require_once(SBOOK.'core/controller.php');
  */
 class sBook
 {
-    public $dblink = null;
+    public $dblink  = null;
     public $baseuri = null;
+    public $url     = null;
+    private $routes = null;
+
 	static $soap_args = null;
 
     /**
      *
      */
-    function sBook()
+    public function __construct()
     {
-		
+        $this->routes = parse_ini_string(ROUTES,true);
+        $this->Dispatch();
     }
 
-    function &_GetInstance()
+    public static function &_GetInstance()
     {
         static $instance = null;
 
-        if (!isset($instance))
-        {
+        if (!isset($instance)) {
             $instance = new sBook();
         }
         return $instance;
     }
 
-    function &DBLink($dsn=null)
+    public static function &DBLink($dsn=null)
     {
         pear('MDB2');
         $sBook =& sBook::_GetInstance();
@@ -98,7 +103,7 @@ class sBook
         return $sBook->dblink;
     }
 
-    static function Pager($page,$rows,$pprow,$ppgroup=null)
+    public static function Pager($page,$rows,$pprow,$ppgroup=null)
     {
         $pager['numpages'] = (($rows - ($rows % $pprow)) / $pprow);
         if( ($rows % $pprow) > 0 ) $pager['numpages']++;
@@ -143,322 +148,105 @@ class sBook
         return $pager;
     }
 
+    private function _notFound()
+    {
+        require_once(CORE . 'controller.php');
+        $controller = new controller();
+        $controller->_error_404();
+        exit;
+    }
+
     /**
      * This section dispatches the action
      *
      */
 
-    function Dispatch()
+    public function Dispatch()
     {
-        if(isset($_GET['url']) or (count($_GET) == 0))
-        {
-            $url = $_GET['url'];
-            sBook::DispatchRewrite($url);
-        }
-        else
-        {
-            sBook::DispatchSimple();
-        }
-    }
-    
-    
-    function DispatchSimple()
-    {
-        $url = implode('/',$_GET);
-        sBook::DispatchRewrite($url);
-    }
-
-    function FindDefaultController($folder)
-    {
-        $folder_name = basename($folder);
-    }
-
-    function DispatchRewrite($url)
-    {
-	
-	
-	
-        $url_parts = explode('/',$url);
-        //Folder
-        $folder_name = '';
-        $folder = ACTIONS; // Default folder
-        while (is_dir($folder.$url_parts[0]) && ($url_parts[0]!=''))
-        {
-            $folder = $folder.$url_parts[0].DS;
-            $folder_name = $url_parts[0];
-            $url_parts = array_slice($url_parts,1);
-        }
-
-        //Controller
-        if(file_exists($folder.$url_parts[0].'.php'))
-        {
-            $controller_name = $url_parts[0];
-            $url_parts = array_slice($url_parts,1);
-        }
-        elseif(file_exists($folder.$folder_name.'.php'))
-        {
-            $controller_name = $folder_name; // Default controller
-        }
-        else
-        {
-            $controller_name = 'main';
-        }
-
-        // Include the required controllers
-	//
-        if($controller_name == 'main')
-        {
-            require_once($folder.'main.php'); // Always include
-        }
-        else
-        {
-            $require_array = array();
-            $temp_folder = $folder;
-	    
-            while(!file_exists($temp_folder.'main.php'))
-            {
-                $dir = dirname($temp_folder).DS;
-                $base = basename($temp_folder);
-                array_unshift($require_array,$temp_folder.$base.'.php');
-                $temp_folder = $dir;
-            }
-            array_unshift($require_array,$temp_folder.'main.php');
-	    
-            foreach($require_array as $req_file) {
-                require_once($req_file);
-            }
-	    	    
-            //require($folder.$controller_name.'.php');
-            require_once($folder.$controller_name.'.php');
-        }
-
-        // Instantiate the controller
-        // All controller classes have the prefix 'controller_'
-        // to avoid name clashes with other classes
-        $controller_name = 'controller_'.$controller_name;
-        $controller = new $controller_name();
-
-        //Action
-        if(method_exists($controller,$url_parts[0]))
-        {
-            $action = $url_parts[0];
-            $url_parts = array_slice($url_parts,1);
-        }
-        else
-        {
-            $action = 'index';
-        }
-
-        // Clean empty params
-        $params = array();
-        foreach($url_parts as $part)
-        {
-            if($part != "") $params[] = $part;
-        }
-	
-        // Call the intitialize, action, and finalize methods;
-        $controller->initialize();
-        call_user_func_array(array(&$controller,$action),$params);
-        $controller->finalize();
-    }
-    function _DispatchRewrite($url)
-    {
-	uses('debug');
-	pear('FirePHPCore/fb');
-		 
-	// Variaveis para acesso a 404
+        // Instantiate the Mapper class
         //
-        $controllerExists   = false;
-        $methodExists       = false;
-    	$folderExists       = false;
-        $actionExists       = false;
-    	$show404            = false;
-    	
-        $url_parts = explode('/',$url);
-        
-        // Folder
-        //
-        $folder_name = '';
-        $folder = ACTIONS; // Default folder
-        
-        while (is_dir($folder.$url_parts[0]) && ($url_parts[0]!=''))
-        {
-        	$folderExists   = true;
-            
-            $folder         = $folder.$url_parts[0].DS;
-            $folder_name    = $url_parts[0];
-            $url_parts      = array_slice($url_parts,1);
-        }
-        
-        
-        // Controller
-        //
-        if(file_exists($folder.$url_parts[0].'.php'))
-        {
-            $controllerExists = true;
-            $controller_name = $url_parts[0];
-            $url_parts = array_slice($url_parts,1);
-        }
-        elseif(file_exists($folder.$folder_name.'.php'))
-        {
-            $controllerExists = true;
-            $controller_name = $folder_name; // Default controller (controller name = $folder name)
-        }
-        else
-        {
-            $controllerExists = false;
-            $controller_name = 'main';
-        }
-        
-       
-        
+        $mapper = Net_URL_Mapper::getInstance();
 
-        // Include the required controllers
+        // Iterate over the defined routes in the config
+        // and compile them
         //
-        if($controller_name == 'main' && file_exists($folder.'main.php')) {
-            require_once($folder.'main.php'); // Always include
-            
-        } else {
-            
-            $require_array = array();
-            $temp_folder = $folder;
-            
-            while(!file_exists($temp_folder.'main.php'))
-            {
-                $dir = dirname($temp_folder).DS;
-                $base = basename($temp_folder);
-                array_unshift($require_array,$temp_folder.$base.'.php');
-                $temp_folder = $dir;
-            }
-            array_unshift($require_array,$temp_folder.'main.php');
-            
-            foreach($require_array as $req_file){
-                if(file_exists($req_file)) {
-                    require_once($req_file);
-                }
-            }
-            
-            if(file_exists($folder.$controller_name.'.php')) {
-                require_once($folder.$controller_name.'.php');
+        foreach($this->routes as $route){
+            if(isset($route['params'])){ // Dynamic routing: If there are additional params
+                $mapper->connect($route['match'], $route['map'], $route['params']);
+
+            } else { // Static Routing: No additional parameters
+                $mapper->connect($route['match'], $route['map']);
             }
         }
-        
-               
-
-        // Instantiate the controller
-        // All controller classes have the prefix 'controller_'
-        // to avoid name clashes with other classes
+        // Map URL to route
         //
-        $controller_name = 'controller_'.$controller_name;
-        $controller = new $controller_name();
-        
+        try {
+            $route = $mapper->match($_SERVER['REQUEST_URI']);
+            
+        } catch (Net_URL_Mapper_InvalidException $e){ // If a path conforms to a given structure, but contains invalid parameters, catch the exception here. And throw not found.
+            $this->_notFound();
+            exit;
+        }
 
-        // Action
+        // If there's no route found then throw a 404 - not found
         //
-        if(method_exists($controller,$url_parts[0]) && is_callable(array($controller,$url_parts[0])) ) {
-            $methodExists = true;
-            $actionExists = true;
+        if($route === null){
+            $this->_notFound();
+            exit;
+
+        } else { // We got a valid route
+
+            $route['params']     = (isset($route['params']) ? $route['params'] : array());  // call_user_func_array below needs always 2 params, if we don't pass params in the
+                                                                                            // route then we need to pass an empty array as the argument
             
-            $action = $url_parts[0];
-            $url_parts = array_slice($url_parts,1);
+            $controllerFileName  = $route['controller'] . '.php';       // Controller filenames are always ".php" files with whatever we pass in the controller param as filename.
+                                                                        // ex: filename for "controller" = "foo" is "foo.php"
             
-            
-        } else {
-            $methodExists = false;
-            
-            if(method_exists($controller,'index') && is_callable(array($controller,'index'))) {
-                $actionExists = true;
-                $action = 'index';
-                
+            $controllerClassName = 'controller_'.$route['controller'];  // Controller with whatever we pass in the controller param as class name prefixed with "controller_"
+                                                                        // ex: classname for "controller" = "foo" is "controller_foo"
+
+            $methodName = $route['action'];                             // Method name is whatever we pass in the controller param as method name
+
+            require_once(ACTIONS . $controllerFileName);    // Require the controller file 
+                                                            // TODO: use folder param to be able to include a file inside a folder.
+
+            $controller = new $controllerClassName();       // Instantiate the controller class
+
+            // Only 
+            if(isset($route['action']) && method_exists($controller,$methodName) && is_callable(array($controller, $methodName), true)){
+                // Call the intitialize, action, and finalize methods;
+                $controller->initialize();
+
+                call_user_func_array( array(&$controller, $methodName), $route['params'] );
+
+                $controller->finalize();
+
             } else {
-                $actionExists = false;
-                $action = '_error_404';
-                
+
+                if(!isset($route['action'])){
+                    $this->_error('Route Action param not defined');
+
+                } else if(!method_exists($controller,$methodName)){
+                    $this->_error("Route action does not exist @ class: {$controllerClassName}, file: ({$controllerFileName})");
+
+                } else if(!is_callable(array($controller, $methodName), true)){
+                    $this->_error("Route action is not callable @ class: {$controllerClassName}, file: ({$controllerFileName})");
+
+                } else {
+                     $this->_error("Unknown Routing error");
+                }
+
+
+
             }
         }
+        exit;
+    }
+
+    private function _error($msg){
         
-        // If we turn on 404 pages check if the url is valid, else show 404
-        //
-        //$method = new ReflectionMethod('controller','DefaultAction');
-	//debug::dump($method->getParameters());
-	//exit;
-	
-	$log_array = array(
-	    'folderExists'	=> $folderExists,
-	    'controllerExists'	=> $controllerExists,
-	    'methodExists'	=> $methodExists,
-	    'actionExists'	=> $actionExists
-	);
-	
-	fb::log($log_array);
-	
-        
-        if (SHOW404 == true){
-
-	    // Empty URL == BASEURI ex: http://domain.com/
-            //
-	    if(!empty($url)) { // Se o url estiver vazio quer dizer que vamos chamar o controller_main->index em /main.php
-
-		if($folderExists == false && $controllerExists === false) { 
-		    $show404 = true;
-		
-		} else if($folderExists == true && $controllerExists==false){
-		    $show404 = true;
-		    
-		} else {					
-			// Check to see if params are allowed
-			//
-			$params = array();
-			foreach($url_parts as $part)
-			{
-			    if($part != "") $params[] = $part;
-			}
-			
-			$method				= new ReflectionMethod($controller_name,$action);
-			$numParams			= $method->getNumberOfParameters();
-			$numRequiredParams	= $method->getNumberOfRequiredParameters();
-			$methodParams		= $method->getParameters();
-
-			if($numParams == 0 && count($params) > 0) {
-				$show404 = true;
-
-			} else if($numParams > 0 && count($params) < $numRequiredParams){
-				$show404 = true;
-				
-			}
-			
-		}
-
-
-	    }
-
-	    // Show 404
-            //
-	    if ($show404==true){
-		//header('location:'.PAGE404_URI);
-		debug::dump('404');
-				
-	    } else {
-		
-	    }
-
-        }
-        		
-        // Clean empty params
-		//
-        $params = array();
-        foreach($url_parts as $part)
-        {
-            if($part != "") $params[] = $part;
-        }
-
-        // Call the intitialize, action, and finalize methods;
-        $controller->initialize();
-        call_user_func_array(array(&$controller,$action),$params);
-        $controller->finalize();
-
-		
-		
+        include(CORETEMPLATES . 'sbook_error.tpl');
+        exit;
     }
 
 	

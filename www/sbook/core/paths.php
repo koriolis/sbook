@@ -68,6 +68,7 @@ define ('CONFIGS',     APP.'config'.DS);
  * Path to the libs directory.
  */
 define ('LIBS',        SBOOK.'libs'.DS);
+define ('CORE',        SBOOK.'core'.DS);
 
 /**
  * Path to the site libs directory.

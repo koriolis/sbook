@@ -48,13 +48,13 @@ define ('SBOOK', ROOT.'sbook'.DS);
 /**
  * Include the needed spellbook core files 
  */
-require_once(SBOOK.'core/paths.php');
-require_once(SBOOK.'core/basics.php');
-require_once(SBOOK.'core/sbook.php');
+require_once(SBOOK . 'core/paths.php');
+require_once(SBOOK . 'core/basics.php');
+require_once(SBOOK . 'core/sbook.php');
 
 /**
- * Call the dispatch method to do the heavy lifting 
+ * Initialize app
  */
-sBook::Dispatch();
+$sbook = new sBook();
 
 ?>

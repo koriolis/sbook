@@ -37,7 +37,7 @@ class Template
 		if(!is_dir(CACHE)) mkdir(CACHE);
 
 		$frontendOptions = array(
-			'lifetime' => 7200, // cache lifetime of 2 hours
+			'lifetime'                => 7200, // cache lifetime of 2 hours
 			'automatic_serialization' => false
 		);
 
@@ -199,7 +199,7 @@ class Template
 
 		// Se existirem ficheiros locais
 		//
-		if(is_array($this->_template_vars['css']) && count($this->_template_vars['css'])>0){
+		if(isset($this->_template_vars['css']) && is_array($this->_template_vars['css']) && count($this->_template_vars['css'])>0){
 
 			$files = array_values($this->_template_vars['css']);
 			// Get last-modified times from files
@@ -238,7 +238,7 @@ class Template
 
 		// Se existirem ficheiros media_print
 		//
-		if(is_array($this->_template_vars['print_css']) && count($this->_template_vars['print_css'])>0){
+		if(isset($this->_template_vars['print_css']) && is_array($this->_template_vars['print_css']) && count($this->_template_vars['print_css'])>0){
 
 			$files = array_values($this->_template_vars['print_css']);
 			// Get last-modified times from files
@@ -274,7 +274,7 @@ class Template
 
 		// Global JS
 		//
-		if(is_array($this->_template_vars['global_js']) && count($this->_template_vars['global_js'])>0){
+		if(isset($this->_template_vars['global_js']) && is_array($this->_template_vars['global_js']) && count($this->_template_vars['global_js'])>0){
 			
 			$files = array_values($this->_template_vars['global_js']);
 
@@ -316,7 +316,7 @@ class Template
 		
 		// Local JS
 		//
-		if(is_array($this->_template_vars['js']) && count($this->_template_vars['js'])>0){
+		if(isset($this->_template_vars['js']) && is_array($this->_template_vars['js']) && count($this->_template_vars['js'])>0){
 			//logmsg('------------------------------------- LOCAL');
 			
 			$files = array_values($this->_template_vars['js']);
@@ -369,7 +369,7 @@ class Template
 	
 	}
 
-    private function compress_css($css){
+    private function compress_css($css) {
         // remove comments
         $css = preg_replace('!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $css);
         

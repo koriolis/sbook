@@ -8,7 +8,6 @@ define('DEFAULT_DSN','mysql://user:password@host/dbname');
 
 define('BASEURI','http://sbook/');
 
-define('TEMPLATES',APP.'templates/');
 define('UPLOADS',APP.'uploads/');
 
 define('TEMPLATES_URI',BASEURI.'app/templates/');
