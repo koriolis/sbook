@@ -171,6 +171,7 @@
             
             $config_file = CONFIGS.SERVER_NAME.'.php';
             if (!file_exists($config_file)) {
+                debug::dump($_SERVER['HTTP_HOST']);
                 copy(SBOOK.'config/sample_config.php',$config_file);
                 echo("New config file created: '".$config_file."'<br />");
             }

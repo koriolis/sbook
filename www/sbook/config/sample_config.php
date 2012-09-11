@@ -44,22 +44,12 @@ define('MAIL_SERVER','mail.wiz.pt');
 define('MAIL_FROM_EMAIL','info@wiz.pt');
 define('MAIL_FROM_NAME','Wiz Interactive');
 
-define('ROUTES','[
-{
-	"pattern":"/",
-	"mapping":{
-		"controller":"main",
-		"action":"index"
-	}
-}
-]');
-
-$sbook_routes = array(
-	'pattern' => '/',
-	'mapping' => array(
-		'controller'=>'main',
-		'action'=>'index'
-    )
-);
+define('ROUTES','
+	[default]
+		match           = "/"
+		map[controller] = "main"
+		map[action]     = "index"
+		#params[hello]   = "[a-z]+"		
+');
 
 ?>
