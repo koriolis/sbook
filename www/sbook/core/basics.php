@@ -24,8 +24,9 @@
      * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
      * Boston, MA  02110-1301, USA.
      *
-     * @author       Jorge Pena <jmgpena@gmail.com>
-     * @version 3.0
+     * @author       Jorge Pena     <jmgpena@gmail.com>
+     * @author       Nuno Ferreira  <koriolis@gmail.com>
+     * @version 3.1
      * @package sbook
      */
 
@@ -170,34 +171,42 @@
             // Ex. www.wiz.pt.cfg
             
             $config_file = CONFIGS.SERVER_NAME.'.php';
-            if (!file_exists($config_file)) {
-                debug::dump($_SERVER['HTTP_HOST']);
+            $routes_file = CONFIGS.SERVER_NAME.'-routes.php';
+            
+            if (!is_file($config_file)) {
                 copy(SBOOK.'config/sample_config.php',$config_file);
                 echo("New config file created: '".$config_file."'<br />");
             }
 
-            require_once($config_file); // read the config file
-        }
+            if (!is_file($routes_file)) {
+                copy(SBOOK.'config/sample_routes.php',$routes_file);
+                echo("New sample routes file created: '".$routes_file."'<br />");                
+            }
 
+            require_once($config_file); // read the config file
+
+        }
+        
         $parts = explode('/',$path);
         $name  = strtoupper(implode('_',$parts));
-        if (defined($name))
+        if (defined($name)){
+
             return constant($name);
-        else
+        } else {
             return null;
+        }
     }
 
     /**
      * Basepath for links in the site. 
      */
-    $basics_baseuri = config('baseuri');
-
-
+    $basics_baseuri = config('BASEURI');
 
     if (empty($basics_baseuri))
         if(!defined('BASEURI')) define('BASEURI','http://'.SERVER_NAME.'/');
     else
         if(!defined('BASEURI')) define('BASEURI',config('baseuri'));
+    
     /**
      * Level of debugging for this app.
      */
@@ -255,6 +264,9 @@
            echo "<pre style='display:block;font-family:Consolas,monospaced;padding:10px;'>".$err."</pre>";
        } else {
            // save to the error log, and e-mail me if there is a critical user error
+            if(!is_dir(LOGS)){
+                mkdir(LOGS);
+            }
            error_log($err, 3, LOGS.$_SERVER['SERVER_NAME'].'.log');
            if ($errno == E_USER_ERROR) {
                mail(config('error/mail'), "Critical User Error", $err);
@@ -307,8 +319,7 @@
     
 	function get_method_closure($object,$method_name){
 		if(method_exists(get_class($object),$method_name)) {
-			$func            = create_function( '',
-'
+			$func            = create_function( '','
                                 $args            = func_get_args();
                                 static $object    = NULL;
                                
@@ -326,16 +337,18 @@
                                 }else{
                                     return FALSE;
                                 }'
-                            );
+            );
            
             //Initialize static $object
             $func($object);
            
             //Return closure
             return $func;
-        }else{
+
+        } else {
             return false;
-        }       
+
+        } 
     } 
     
 
@@ -390,14 +403,14 @@
 
     if (!function_exists('array_combine')) 
     {
-    /**
-     * Combines given identical arrays by using the first array's values as keys,
-     * and the second one's values as values. (Implemented for back-compatibility with PHP4.)
-     *
-     * @param array $a1
-     * @param array $a2
-     * @return mixed Outputs either combined array or false.
-     */
+        /**
+         * Combines given identical arrays by using the first array's values as keys,
+         * and the second one's values as values. (Implemented for back-compatibility with PHP4.)
+         *
+         * @param array $a1
+         * @param array $a2
+         * @return mixed Outputs either combined array or false.
+         */
         function array_combine($a1, $a2) 
         {
             $a1 = array_values($a1);

@@ -59,8 +59,15 @@ class sBook
      */
     public function __construct()
     {
-        $this->routes = parse_ini_string(ROUTES,true);
+        $this->routes     = parse_ini_string(ROUTES,true);
+        $this->routes_alt = self::load(CONFIGS . SERVER_NAME . '-routes.php');
+        
         $this->Dispatch();
+    }
+
+    private static function dump_constants($type = 'user'){
+        $defined_constants = get_defined_constants(true);
+        debug::dump($defined_constants[$type]);
     }
 
     public static function &_GetInstance()
@@ -156,6 +163,11 @@ class sBook
         exit;
     }
 
+    public static function load($file)
+    {
+        return include $file;
+    }
+
     /**
      * This section dispatches the action
      *
@@ -170,14 +182,15 @@ class sBook
         // Iterate over the defined routes in the config
         // and compile them
         //
-        foreach($this->routes as $route){
-            if(isset($route['params'])){ // Dynamic routing: If there are additional params
-                $mapper->connect($route['match'], $route['map'], $route['params']);
 
+        foreach($this->routes_alt as $match=>$route){
+            if(isset($route['params'])){ // Dynamic routing: If there are additional params
+                $mapper->connect($match, $route['map'], $route['params']);
             } else { // Static Routing: No additional parameters
-                $mapper->connect($route['match'], $route['map']);
+                $mapper->connect($match, $route['map']);
             }
         }
+        
         // Map URL to route
         //
         try {
@@ -214,7 +227,9 @@ class sBook
 
             // Only 
             if(isset($route['action']) && method_exists($controller,$methodName) && is_callable(array($controller, $methodName), true)){
+                
                 // Call the intitialize, action, and finalize methods;
+                //
                 $controller->initialize();
 
                 call_user_func_array( array(&$controller, $methodName), $route['params'] );
@@ -243,7 +258,7 @@ class sBook
         exit;
     }
 
-    private function _error($msg){
+    public static function _error($msg){
         
         include(CORETEMPLATES . 'sbook_error.tpl');
         exit;

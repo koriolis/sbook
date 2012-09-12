@@ -43,13 +43,3 @@ define('ACCESS_PASS','password');
 define('MAIL_SERVER','mail.wiz.pt');
 define('MAIL_FROM_EMAIL','info@wiz.pt');
 define('MAIL_FROM_NAME','Wiz Interactive');
-
-define('ROUTES','
-	[default]
-		match           = "/"
-		map[controller] = "main"
-		map[action]     = "index"
-		#params[hello]   = "[a-z]+"		
-');
-
-?>
