@@ -134,10 +134,10 @@ php_flag html_errors 1
 
 # use utf-8 encoding for anything served text/plain or text/html
 # AddDefaultCharset On
-AddDefaultCharset ISO-8859-1
+AddDefaultCharset utf-8
 
 # force utf-8 for a number of file formats
-# AddCharset utf-8 .html .css .js .xml .json .rss
+AddCharset utf-8 .html .css .js .xml .json .rss
 # AddDefaultCharset ISO-8859-1 .html .css .js .xml .json .rss
 
 # We don't need to tell everyone we're apache.
@@ -152,7 +152,9 @@ ServerSignature Off
 
     # Prevent access to any file inside the sbook folder
     RewriteRule ^sbook/(.*)$ [f]
-	RewriteRule ^blog(.*)$ - [last]
+
+    # Prevent access to any file inside the default config folder
+    RewriteRule ^app/config/(.*)$ [f]
 	
 	# Rewrite all requests to sbook
     RewriteCond %{REQUEST_FILENAME} !-f
