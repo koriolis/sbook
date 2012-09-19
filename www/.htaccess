@@ -60,16 +60,16 @@ AddType application/x-chrome-extension crx
 	mod_gzip_item_include         file       \.js$
 	mod_gzip_item_include         file       \.css$
 	mod_gzip_item_include         mime       ^text/html$
-  	mod_gzip_item_include         mime       ^text/plain$
-  	mod_gzip_item_include         mime       ^text/css$
-  	mod_gzip_item_include         mime       ^text/javascript$
-  	mod_gzip_item_include         mime       ^text/ecmascript$
-  	mod_gzip_item_include         mime       ^text/x-component$
-  	mod_gzip_item_include         mime       ^application/x-javascript$
-  	mod_gzip_item_include         mime       ^application/javascript$
-  	mod_gzip_item_include         mime       ^application/json$
-  	mod_gzip_item_include         mime       ^application/xml$
-  	mod_gzip_dechunk              Yes
+	mod_gzip_item_include         mime       ^text/plain$
+	mod_gzip_item_include         mime       ^text/css$
+	mod_gzip_item_include         mime       ^text/javascript$
+	mod_gzip_item_include         mime       ^text/ecmascript$
+	mod_gzip_item_include         mime       ^text/x-component$
+	mod_gzip_item_include         mime       ^application/x-javascript$
+	mod_gzip_item_include         mime       ^application/javascript$
+	mod_gzip_item_include         mime       ^application/json$
+	mod_gzip_item_include         mime       ^application/xml$
+	mod_gzip_dechunk              Yes
 </IfModule>
 
 <IfModule mod_expires.c>
@@ -146,17 +146,25 @@ ServerSignature Off
 <IfModule mod_rewrite.c>
     RewriteEngine on
 
-# Base URI for all rewritten urls
-# if sBook is inside a folder you need to change this. Ex: RewriteBase /gourmet
+  # Base URI for all rewritten urls
+  # if sBook is inside a folder you need to change this. Ex: RewriteBase /gourmet
     RewriteBase /
 
-    # Prevent access to any file inside the sbook folder
-    RewriteRule ^sbook/(.*)$ [f]
+  # Prevent access to any file inside the sbook folder
+    RewriteRule ^sbook/(.*)$ [fL]
 
-    # Prevent access to any file inside the default config folder
+  # Prevent access to any file inside the default config folder
     RewriteRule ^app/config/(.*)$ [f]
+
+  # Versioning of js and css files
+  # Any file in the form of abcdef.timestamp.min.js or abcdef.timestamp.min.css is rewritten as abcdef.min.js or abcdef.min.css
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)(/[a-z]+)\.v[0-9]+(\.min\.(js|css))$ $1$2$3 [L]
+
 	
-	# Rewrite all requests to sbook
+	# Rewrite all requests to sbook index.php
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+    
 </IfModule>
