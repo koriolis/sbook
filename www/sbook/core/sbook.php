@@ -52,7 +52,7 @@ class sBook
     public $url     = null;
     private $routes = null;
 
-	static $soap_args = null;
+    static $soap_args = null;
 
     /**
      *
@@ -115,7 +115,7 @@ class sBook
         pear('MDB2');
         $sBook =& sBook::_GetInstance();
 
-		if($dsn === null) $dsn = DEFAULT_DSN;
+        if($dsn === null) $dsn = DEFAULT_DSN;
         
         //var_dump($sBook->dblink->database_name . '/ '. $dsn);
         $dsn_dbname = array_pop(explode('/', $dsn));
@@ -125,14 +125,14 @@ class sBook
         { // connect to db
 
             $sBook->dblink =& MDB2::connect($dsn);
-			
+            
             if (PEAR::isError($sBook->dblink))
             {
                 trigger_error('sBook::DBLink: '.$sBook->dblink->getDebugInfo());
             }
             else
             {
-				//if(is_array($options)) foreach($options as $option=>$value) $sBook->dblink->setOption($option,constant($value));
+                //if(is_array($options)) foreach($options as $option=>$value) $sBook->dblink->setOption($option,constant($value));
                 $sBook->dblink->setFetchMode(MDB2_FETCHMODE_ASSOC);
             }
         }
@@ -167,19 +167,19 @@ class sBook
         
         
         if($ppgroup != null){
-			//Calculate groups if any
-			$pager['numgroups'] 		= ceil($pager['numpages']/$ppgroup);
-			$pager['group']				= ceil($pager['page']/$ppgroup);
-			$pager['group_start']		= ($pager['group']*$ppgroup-$ppgroup)+1;
-			$pager['group_end']			= $pager['group_start']+$ppgroup-1;
-			if($pager['group_end'] > $pager['last']) $pager['group_end'] = $pager['last'];
-			
-			$pager['next_group_start']	= ($pager['group']<$pager['numgroups'])?$pager['group_end']+1:$pager['group_start'];
-			$pager['next_group_end']	= $pager['next_group_start']+$ppgroup-1;
-			
-			
-			$pager['prev_group_end'] 	= ($pager['group']>1)?$pager['group_start']-1:$pager['group_start'];
-			$pager['prev_group_start']	= $pager['prev_group_start']+$ppgroup-1;
+            //Calculate groups if any
+            $pager['numgroups']         = ceil($pager['numpages']/$ppgroup);
+            $pager['group']             = ceil($pager['page']/$ppgroup);
+            $pager['group_start']       = ($pager['group']*$ppgroup-$ppgroup)+1;
+            $pager['group_end']         = $pager['group_start']+$ppgroup-1;
+            if($pager['group_end'] > $pager['last']) $pager['group_end'] = $pager['last'];
+            
+            $pager['next_group_start']  = ($pager['group']<$pager['numgroups'])?$pager['group_end']+1:$pager['group_start'];
+            $pager['next_group_end']    = $pager['next_group_start']+$ppgroup-1;
+            
+            
+            $pager['prev_group_end']    = ($pager['group']>1)?$pager['group_start']-1:$pager['group_start'];
+            $pager['prev_group_start']  = $pager['prev_group_start']+$ppgroup-1;
         }
 
         return $pager;
@@ -203,7 +203,7 @@ class sBook
      *
      */
 
-    public function Dispatch()
+    private function Dispatch()
     {
         // Instantiate the Mapper class
         //
@@ -213,8 +213,9 @@ class sBook
         // and compile them
         //
         foreach($this->routes as $match=>$route){
-            if(isset($route['params'])){ // Dynamic routing: If there are additional params
-                $mapper->connect($match, $route['map'], $route['params']);
+            if(isset($route['rules'])){ // Dynamic routing: If there are rules to apply
+                $mapper->connect($match, $route['map'], $route['rules']);
+
             } else { // Static Routing: No additional parameters
                 $mapper->connect($match, $route['map']);
             }
@@ -227,8 +228,11 @@ class sBook
             
         } catch (Net_URL_Mapper_InvalidException $e){ // If a path conforms to a given structure, but contains invalid parameters, catch the exception here. And throw not found.
             $this->_notFound();
+            //sBook::_error("Routing: ". $e->getMessage());
             exit;
         }
+
+        
 
         // If there's no route found then throw a 404 - not found
         //
@@ -238,39 +242,41 @@ class sBook
 
         } else { // We got a valid route
 
-            $route['params']     = (isset($route['params']) ? $route['params'] : array());  // call_user_func_array below needs always 2 params, if we don't pass params in the
-                                                                                            // route then we need to pass an empty array as the argument
+            $controller = $route['controller'];
+            $action     = $route['action'];
+            unset($route['controller'], $route['action']);
+                        
             
-            $controllerFileName  = $route['controller'] . '.php';       // Controller filenames are always ".php" files with whatever we pass in the controller param as filename.
-                                                                        // ex: filename for "controller" = "foo" is "foo.php"
+            $controllerFileName  = $controller . '.php';        // Controller filenames are always ".php" files with whatever we pass in the controller param as filename
+                                                                // ex: filename for "controller" = "foo" is "foo.php"
             
-            $controllerClassName = 'controller_'.$route['controller'];  // Controller with whatever we pass in the controller param as class name prefixed with "controller_"
+            $controllerClassName = 'controller_'.$controller;  // Controller with whatever we pass in the controller param as class name prefixed with "controller_"
                                                                         // ex: classname for "controller" = "foo" is "controller_foo"
 
-            $methodName = $route['action'];                             // Method name is whatever we pass in the controller param as method name
+            $methodName = $action;                             // Method name is whatever we pass in the controller param as method name
 
             require_once(ACTIONS . $controllerFileName);    // Require the controller file 
                                                             // TODO: use folder param to be able to include a file inside a folder.
 
             $controller = new $controllerClassName();       // Instantiate the controller class
 
-            // Only 
-            if(isset($route['action']) && method_exists($controller,$methodName) && is_callable(array($controller, $methodName), true)){
+            
+            if(isset($action) && method_exists($controller, $methodName) && is_callable(array($controller, $methodName), true)){
                 
-                // Call the intitialize, action, and finalize methods;
+                // Call the intitialize, action, and finalize methods passsing the same params as we pass to the method name
                 //
-                $controller->initialize();
+                $controller->initialize($route);
 
-                call_user_func_array( array(&$controller, $methodName), $route['params'] );
+                call_user_func_array( array(&$controller, $methodName), $route );
 
-                $controller->finalize();
+                $controller->finalize($route);
 
             } else {
 
-                if(!isset($route['action'])){
+                if(!isset($action)){
                     $this->_error('Route Action param not defined');
 
-                } else if(!method_exists($controller,$methodName)){
+                } else if(!method_exists($controller, $methodName)){
                     $this->_error("Route action does not exist @ class: {$controllerClassName}, file: ({$controllerFileName})");
 
                 } else if(!is_callable(array($controller, $methodName), true)){
@@ -279,8 +285,6 @@ class sBook
                 } else {
                      $this->_error("Unknown Routing error");
                 }
-
-
 
             }
         }
@@ -293,5 +297,5 @@ class sBook
         exit;
     }
 
-	
+    
 }
