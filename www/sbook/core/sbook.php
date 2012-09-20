@@ -59,11 +59,41 @@ class sBook
      */
     public function __construct()
     {
-        $this->routes     = parse_ini_string(ROUTES,true);
-        $this->routes_alt = self::load(CONFIGS . SERVER_NAME . '-routes.php');
+        $config_file         = CONFIGS.SERVER_NAME.'.php';
+        $default_config_file = CONFIGS.'default_config_file.php';
+        $routes_file         = CONFIGS.'routes.php';
+        
+        
+        if (!is_file($config_file)) { // If there's no config subdomain file
+            
+            if(!is_file($default_config_file)){ // If there's also not a default config file
+                copy(SBOOK.'config/sample_config.php',$default_config_file);
+            }
+            self::load($default_config_file); // read the default config file
+
+        } else {
+            self::load($config_file); // read the subdomain config file
+        }
+
+        if (!is_file($routes_file)) { // If there's no config subdomain file
+            copy(SBOOK.'config/sample_routes.php', $routes_file);
+        }
+        $routes = self::load(CONFIGS . 'routes.php');
+        if(isset($routes[SERVER_NAME])){
+            $this->routes = $routes[SERVER_NAME];
+
+        } else if(isset($routes['default'])){
+            $this->routes = $routes['default'];
+
+        } else {
+            sBook::_error("No subdomain or default route found @ <code>{$routes_file}</code>");
+            exit;
+        }
         
         $this->Dispatch();
     }
+
+
 
     private static function dump_constants($type = 'user'){
         $defined_constants = get_defined_constants(true);
@@ -182,8 +212,7 @@ class sBook
         // Iterate over the defined routes in the config
         // and compile them
         //
-
-        foreach($this->routes_alt as $match=>$route){
+        foreach($this->routes as $match=>$route){
             if(isset($route['params'])){ // Dynamic routing: If there are additional params
                 $mapper->connect($match, $route['map'], $route['params']);
             } else { // Static Routing: No additional parameters

@@ -165,48 +165,24 @@
      * @param string $path Path of value or values in XML Config file
      * @return Config value or associative array if is a set of values
      */
-    function config($path = null)
+    function config()
     {
-        if (!defined('CONFIG')) {
-            // Ex. www.wiz.pt.cfg
-            
-            $config_file = CONFIGS.SERVER_NAME.'.php';
-            $routes_file = CONFIGS.SERVER_NAME.'-routes.php';
-            
-            if (!is_file($config_file)) {
-                copy(SBOOK.'config/sample_config.php',$config_file);
-                echo("New config file created: '".$config_file."'<br />");
-            }
-
-            if (!is_file($routes_file)) {
-                copy(SBOOK.'config/sample_routes.php',$routes_file);
-                echo("New sample routes file created: '".$routes_file."'<br />");                
-            }
-
-            require_once($config_file); // read the config file
-
-        }
         
-        $parts = explode('/',$path);
-        $name  = strtoupper(implode('_',$parts));
-        if (defined($name)){
+            
 
-            return constant($name);
-        } else {
-            return null;
-        }
     }
 
     /**
      * Basepath for links in the site. 
      */
+    /*
     $basics_baseuri = config('BASEURI');
 
     if (empty($basics_baseuri))
         if(!defined('BASEURI')) define('BASEURI','http://'.SERVER_NAME.'/');
     else
         if(!defined('BASEURI')) define('BASEURI',config('baseuri'));
-    
+    */
     /**
      * Level of debugging for this app.
      */
