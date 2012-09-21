@@ -1,0 +1,9 @@
+[submodule "idiorm"]
+	path = idiorm
+	url = git://github.com/j4mie/idiorm.git
+[submodule "www/sbook/modules/idiorm"]
+	path = www/sbook/modules/idiorm
+	url = git://github.com/j4mie/idiorm.git
+[submodule "www/sbook/modules/paris"]
+	path = www/sbook/modules/paris
+	url = git://github.com/j4mie/paris.git
