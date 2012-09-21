@@ -244,51 +244,61 @@ class sBook
             exit;
 
         } else { // We got a valid route
+            $controller_path = (dirname($route['controller']) !== '' && dirname($route['controller']) !== '.' && dirname($route['controller']) !== DS ) ? dirname($route['controller']).DS : '';
+            $controller      = basename($route['controller']);
+            $action          = $route['action'];
 
-            $controller = $route['controller'];
-            $action     = $route['action'];
-            unset($route['controller'], $route['action']);
+            unset($route['controller'], $route['action'], $route['controller_path']);
                         
-            
             $controllerFileName  = $controller . '.php';        // Controller filenames are always ".php" files with whatever we pass in the controller param as filename
                                                                 // ex: filename for "controller" = "foo" is "foo.php"
             
-            $controllerClassName = 'controller_'.$controller;  // Controller with whatever we pass in the controller param as class name prefixed with "controller_"
-                                                                        // ex: classname for "controller" = "foo" is "controller_foo"
+            $controllerClassName = 'controller_'.$controller;   // Controller with whatever we pass in the controller param as class name prefixed with "controller_"
+                                                                // ex: classname for "controller" = "foo" is "controller_foo"
 
-            $methodName = $action;                             // Method name is whatever we pass in the controller param as method name
+            $methodName = $action;                              // Method name is whatever we pass in the controller param as method name
 
-            require_once(ACTIONS . $controllerFileName);    // Require the controller file 
-                                                            // TODO: use folder param to be able to include a file inside a folder.
-
-            $controller = new $controllerClassName();       // Instantiate the controller class
-
+            $controller_full_path = ACTIONS . $controller_path . $controllerFileName;
             
-            if(isset($action) && method_exists($controller, $methodName) && is_callable(array($controller, $methodName), true)){
+            if(is_file($controller_full_path)){
+                require_once($controller_full_path);                  // Require the controller file
                 
-                // Call the intitialize, action, and finalize methods passsing the same params as we pass to the method name
-                //
-                $controller->initialize($route);
-
-                call_user_func_array( array(&$controller, $methodName), $route );
-
-                $controller->finalize($route);
-
-            } else {
-
-                if(!isset($action)){
-                    $this->_error('Route Action param not defined');
-
-                } else if(!method_exists($controller, $methodName)){
-                    $this->_error("Route action does not exist @ class: {$controllerClassName}, file: ({$controllerFileName})");
-
-                } else if(!is_callable(array($controller, $methodName), true)){
-                    $this->_error("Route action is not callable @ class: {$controllerClassName}, file: ({$controllerFileName})");
-
-                } else {
-                     $this->_error("Unknown Routing error");
+                if(!class_exists($controllerClassName)){
+                    $this->_error("Class <code>{$controllerClassName}</code> does not exist @ requested controller: <code>{$controller_full_path}</code>");
+                    
                 }
 
+                $controller = new $controllerClassName();       // Instantiate the controller class
+
+                
+                if(isset($action) && method_exists($controller, $methodName) && is_callable(array($controller, $methodName), true)){
+                    
+                    // Call the intitialize, action, and finalize methods passsing the same params as we pass to the method name
+                    //
+                    $controller->initialize($route);
+
+                    call_user_func_array( array(&$controller, $methodName), $route );
+
+                    $controller->finalize($route);
+
+                } else {
+
+                    if(!isset($action)){
+                        $this->_error('Route Action param not defined');
+
+                    } else if(!method_exists($controller, $methodName)){
+                        $this->_error("Route action does not exist @ class: {$controllerClassName}, file: ({$controllerFileName})");
+
+                    } else if(!is_callable(array($controller, $methodName), true)){
+                        $this->_error("Route action is not callable @ class: {$controllerClassName}, file: ({$controllerFileName})");
+
+                    } else {
+                         $this->_error("Unknown Routing error");
+                    }
+
+                }
+            } else {
+                $this->_error("The Requested Controller: <code>{$controller_full_path}</code> was not found.");
             }
         }
         exit;
