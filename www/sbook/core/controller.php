@@ -25,7 +25,8 @@
  * Boston, MA  02110-1301, USA.
  *
  * @author       Jorge Pena <jmgpena@gmail.com>
- * @version 3.0
+ * @author       Nuno Ferreira <koriolis@gmail.com>
+ * @version 3.1
  * @package sbook
  */
 
@@ -36,30 +37,22 @@
  * TODO Rest of documentation
  * 
  * @package sbook
- * @copyright 2004-2006 Wiz Interactive
- * @author Jorge Pena <jmgpena@gmail.com> 
+ * @copyright 2004-2012 Wiz Interactive
+ * @author       Jorge Pena <jmgpena@gmail.com>
+ * @author       Nuno Ferreira <koriolis@gmail.com>
  */
 class Controller
 {
     
-	var $tpl;
+	public $tpl;
 	
-	public function Controller(){
+	public function __construct(){
 		
 		modules('Template');
-        $this->tpl = new Template();
-        $this->tpl->template_dir = TEMPLATES;
-        $this->tpl->assign("baseuri",BASEURI);	
+		$this->tpl = new Template();
+		$this->tpl->template_dir = TEMPLATES;
+		$this->tpl->assign("baseuri", BASEURI);
 	}
-
-	/*
-	public function DefaultAction($params) 
-	{
-        $this->tpl->template_dir = CORETEMPLATES;
-        $this->tpl->display('error_no_site.tpl');
-        exit;
-	}
-	*/
 
 	public function initialize()
 	{
