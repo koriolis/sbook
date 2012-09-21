@@ -52,13 +52,14 @@ class Controller
         $this->tpl->assign("baseuri",BASEURI);	
 	}
 
-
+	/*
 	public function DefaultAction($params) 
 	{
         $this->tpl->template_dir = CORETEMPLATES;
         $this->tpl->display('error_no_site.tpl');
         exit;
 	}
+	*/
 
 	public function initialize()
 	{

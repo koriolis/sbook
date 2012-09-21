@@ -110,6 +110,8 @@ class sBook
         return $instance;
     }
 
+    
+    /*
     public static function &DBLink($dsn=null)
     {
         pear('MDB2');
@@ -139,6 +141,7 @@ class sBook
         
         return $sBook->dblink;
     }
+    */
 
     public static function Pager($page,$rows,$pprow,$ppgroup=null)
     {
