@@ -111,7 +111,7 @@ class sBook
     }
 
     
-    /*
+    
     public static function &DBLink($dsn=null)
     {
         pear('MDB2');
@@ -141,8 +141,7 @@ class sBook
         
         return $sBook->dblink;
     }
-    */
-
+    
     public static function Pager($page,$rows,$pprow,$ppgroup=null)
     {
         $pager['numpages'] = (($rows - ($rows % $pprow)) / $pprow);
@@ -277,7 +276,8 @@ class sBook
                     //
                     $controller->initialize($route);
 
-                    call_user_func_array( array(&$controller, $methodName), $route );
+                    call_user_func_array( array(&$controller, $methodName), array($route) );    // Passing the params inside an array so we get the same params 
+                                                                                                // array as the hook methods (initialize and finalize)
 
                     $controller->finalize($route);
 
