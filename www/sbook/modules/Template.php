@@ -25,22 +25,15 @@ class Template
     private $_css_vars;
     private $_template_file;
 	public $template_dir;
+	public $less_options = array();
 	private $paths = array();
 
 	public function __construct() {
-		// If we forgot to define the path and URI constants in the config file, we define them here by default
+		// By default we try to define the template dir and template uri
+		// Assumes these constants are defined (in the config). We can (and should) define them as needed before render the view
 		//
-		// TODO:	This is a lousy system that isn't flexible and uses defined constants which are slow
-		//			We should use a javascript like options with default values that can be overwritten 
-		//			with values passed at construct time. Ex: new Template(array('template_path'=>'\home\web-root\app\templates\'))
-		//
-		if(!defined('TEMPLATES'))	define('TEMPLATES', APP.'templates/');
-		
-		if(!defined('TEMPLATES_URI'))	define('TEMPLATES_URI',BASEURI.'app/templates/');
-		
-		// If our required folders do not exist we create them.
-		//
-		if(!is_dir(TEMPLATES)) mkdir(TEMPLATES);
+		$this->template_dir     = TEMPLATES;
+		$this->template_baseuri = TEMPLATES_URI;
 		
 	}
 
@@ -95,6 +88,7 @@ class Template
 			if(is_array($this->_template_vars)) {
 				extract($this->_template_vars, EXTR_SKIP);
 			}
+
 			include ($this->template_dir.$this->_template_file);
 			return;
 	
@@ -137,11 +131,13 @@ class Template
 			foreach($files as $file) {
 				$file_type = $this->getExtension($file);//substr(strrchr($file, '.'),1);
 
+
 	            if(!isset($this->_template_vars[$type][$file_type])){
 	            	$this->_template_vars[$type][$file_type] = array();
 	            }
 	            $this->_template_vars[$type][$file_type][] = $file;
 	        }
+
     	}
         
     }
@@ -199,7 +195,6 @@ class Template
 	}
 
 	private function _displayCSS(){
-		
 		// Check if we've got any request for css files
 		//
 		if( (isset($this->_template_vars['global']) && count($this->_template_vars['global'])>0) ||  (isset($this->_template_vars['local']) && count($this->_template_vars['local'])>0) ){
@@ -239,24 +234,34 @@ class Template
 
 				
 				if(!empty($less_files)){ // Lazy Instantiation. We only require and instantiate lessc if we need it.
+					
 					uses('lessc.inc');
+
 					$less = new lessc(); // a blank less
 	            	$less->setFormatter("compressed");
+	            	if(!empty($this->less_options)){
+	            		foreach($this->less_options as $less_config_method => $less_config_method_params)
+	            		if(method_exists($less, $less_config_method)){
+	            			$less->$less_config_method($less_config_method_params);
+	            		}
+	            	}
 	            }
 
 	            $time = $old_time; // Initialize the compare-to time to an old time
 
 				foreach($files_array as $file){
 
-					$full_file_path = TEMPLATES . $file;
+					$full_file_path = $this->template_dir . $file;
 					$file_type      = $this->getExtension($file);
-
 
 					if(is_file($full_file_path)) { // Check if file actually exists
 						if($file_type == 'less'){ // Lets process the less file
-							$cache_file_path = TEMPLATES . $this->removeExtension($file) . '.css';					
-
-	                		$less->checkedCompile($full_file_path, $cache_file_path); // Only compiles if mod time of compiled file is older
+							$cache_file_path = $this->template_dir . $this->removeExtension($file) . '.css';					
+							try {
+	                			$less->checkedCompile($full_file_path, $cache_file_path); // Only compiles if mod time of compiled file is older
+	                		} catch (Exception $e) {
+	                			sBook::_error($e->getMessage());
+	                		}
 	                		
 	                		$files_to_display[] = $cache_file_path;
 	                		$file_time = filemtime($cache_file_path);
@@ -307,7 +312,7 @@ class Template
 				$minified_file_path   = str_replace('.min.', ".v{$minified_file_time}.min.", $minified_file_path);
 				$minified_filename    = basename($minified_file_path);
 				$templates_css_folder = basename($css_folder);
-				$minified_path        = TEMPLATES_URI . $templates_css_folder . "/" . $minified_filename;
+				$minified_path        = $this->template_baseuri . $templates_css_folder . "/" . $minified_filename;
 								
 				echo $this->getCSSLink($minified_path);
 
@@ -355,7 +360,7 @@ class Template
 				$time     = $old_time; // Initialize the compare-to time to an old time
 
 				foreach($js_files as $file){
-					$full_file_path = TEMPLATES . $file;
+					$full_file_path = $this->template_dir . $file;
 
 					if(is_file($full_file_path)) {
 						$file_time = filemtime($full_file_path);
@@ -372,7 +377,7 @@ class Template
 				// Check agains minified file
 				//
 				$js_folder          = dirname($js_files[0]); // Get the js folder from the path of the requested files
-				$minified_file_path = TEMPLATES . $js_folder . "/$type.min.js";
+				$minified_file_path = $this->template_dir . $js_folder . "/$type.min.js";
 				$is_new_version     = false;
 
 				if(is_file($minified_file_path)){
@@ -388,7 +393,7 @@ class Template
 
 				if($time > $minified_file_time){ // We need to minify and concatenate all the files
 					foreach($js_files as $file){
-						$full_file_path = TEMPLATES . $file;
+						$full_file_path = $this->template_dir . $file;
 						$file_string .= "\r\n".file_get_contents($full_file_path);
 					}
 
@@ -400,7 +405,7 @@ class Template
 				$minified_file_time	= filemtime($minified_file_path);
 				$minified_filename   = str_replace(".min.",".v{$minified_file_time}.min.",basename($minified_file_path));
 				$templates_js_folder = $js_folder;
-				$minified_path       = TEMPLATES_URI . $templates_js_folder . "/" . $minified_filename;
+				$minified_path       = $this->template_baseuri . $templates_js_folder . "/" . $minified_filename;
 
 				echo $this->getJSScript($minified_path, $is_new_version);
 
@@ -422,8 +427,8 @@ class Template
 
 			// Get last-modified times from files
 			foreach($files as $i=>$file) {
-				if(is_file(TEMPLATES.$file)) {
-					$modtimes[]=filemtime(TEMPLATES.$file);
+				if(is_file($this->template_dir.$file)) {
+					$modtimes[]=filemtime($this->template_dir.$file);
 				}
 			}
 
@@ -440,9 +445,9 @@ class Template
 
 					if($already_minified === true) {
 						//logmsg('minified: '.$file);
-						$source[] = file_get_contents(TEMPLATES.$file);
+						$source[] = file_get_contents($this->template_dir.$file);
 					} else {
-						$source[] = $this->compress_js(file_get_contents(TEMPLATES.$file));
+						$source[] = $this->compress_js(file_get_contents($this->template_dir.$file));
 					}
 
 				}
@@ -467,8 +472,8 @@ class Template
 			// Get last-modified times from files
 			foreach($files as $i=>$file) {
 				//echo "<script>console.log('".json_encode(is_file('/var/disco2/sites/sogrape2010/www/app/templates/js/areas/agepreloader/preloader.js'))."');</script>";
-				if(is_file(TEMPLATES.$file)) {
-					$modtimes[]=filemtime(TEMPLATES.$file);
+				if(is_file($this->template_dir.$file)) {
+					$modtimes[]=filemtime($this->template_dir.$file);
 				}
 			}
 
@@ -484,10 +489,10 @@ class Template
 
 					if($already_minified === true) {
 						
-						$source[] = file_get_contents(TEMPLATES.$file);
+						$source[] = file_get_contents($this->template_dir.$file);
 					} else {
 						
-						$source[] = $this->compress_js(file_get_contents(TEMPLATES.$file));
+						$source[] = $this->compress_js(file_get_contents($this->template_dir.$file));
 					}
 
 				}
