@@ -47,21 +47,26 @@ require_once(SBOOK.'core/controller.php');
  */
 class sBook
 {
-    public $dblink  = null;
-    public $baseuri = null;
-    public $url     = null;
-    private $routes = null;
+    public $dblink;
+    public $baseuri;
+    public $url;
+    private $routes;
 
-    static $soap_args = null;
+    static $soap_args;
+    private static $instance;
 
     /**
      *
      */
     public function __construct()
     {
+        self::$instance = $this;
+
         $config_file         = CONFIGS.SERVER_NAME.'.php';
         $default_config_file = CONFIGS.'default_config_file.php';
         $routes_file         = CONFIGS.'routes.php';
+
+
         
         
         if (!is_file($config_file)) { // If there's no config subdomain file
@@ -102,12 +107,7 @@ class sBook
 
     public static function &_GetInstance()
     {
-        static $instance = null;
-
-        if (!isset($instance)) {
-            $instance = new sBook();
-        }
-        return $instance;
+        return self::$instance;
     }
 
     
@@ -116,10 +116,12 @@ class sBook
     {
         pear('MDB2');
         $sBook =& sBook::_GetInstance();
-
-        if($dsn === null) $dsn = DEFAULT_DSN;
         
-        //var_dump($sBook->dblink->database_name . '/ '. $dsn);
+
+        if($dsn === null) {
+            $dsn = DEFAULT_DSN;
+        }
+
         $dsn_dbname = array_pop(explode('/', $dsn));
 
         //if ( !isset($sBook->dblink) || $sBook->dblink->database_name !== $dsn_dbname )
@@ -190,7 +192,7 @@ class sBook
     private function _notFound()
     {
         require_once(CORE . 'controller.php');
-        $controller = new controller();
+        $controller = new Controller();
         $controller->_error_404();
         exit;
     }
@@ -248,7 +250,13 @@ class sBook
             $action          = $route['action'];
 
             unset($route['controller'], $route['action'], $route['controller_path']);
-                        
+
+            // Get and pass the Request Method (TODO: A full rest method routing would call a method based on the request method. ie. if the action is index
+            // and the request method is POST, it should call Controller::postIndex instead of Controller::index or something similar.
+            // For now we will pass the request method as an additional arg to the Controller method called.
+            // 
+            $route['request_method'] = strtoupper(isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'get');
+
             $controllerFileName  = $controller . '.php';        // Controller filenames are always ".php" files with whatever we pass in the controller param as filename
                                                                 // ex: filename for "controller" = "foo" is "foo.php"
             
@@ -280,6 +288,7 @@ class sBook
                                                                                                 // array as the hook methods (initialize and finalize)
 
                     $controller->finalize($route);
+
 
                 } else {
 
