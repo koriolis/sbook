@@ -134,6 +134,7 @@ class Template
 
 	            if(!isset($this->_template_vars[$type][$file_type])){
 	            	$this->_template_vars[$type][$file_type] = array();
+
 	            }
 	            $this->_template_vars[$type][$file_type][] = $file;
 	        }
@@ -158,7 +159,7 @@ class Template
 	private function getJSScript($path, $is_new_version){
 		if($is_new_version === true) {
 			$path = $this->removeExtension($path);
-			debug::dump($path);
+			
 		}
 		$doc = new DOMDocument();
 		$script = $doc->appendChild($doc->createElement('script'));
@@ -173,7 +174,7 @@ class Template
         if($url === null) {
             $url = basename($_SERVER['REQUEST_URI']);
         }
-		$dotPos = stripos($url,'.');
+		$dotPos = strripos($url,'.');
 
 		
 		if($dotPos>0){
@@ -184,7 +185,7 @@ class Template
 	}
 	
 	private function removeExtension($filename){
-		$dotPos = stripos($filename,'.');
+		$dotPos = strripos($filename,'.');
 		return strtolower(substr($filename,0, $dotPos));
 		
 	}
