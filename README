@@ -3,4 +3,4 @@ It was developed initially by Nuno Ferreira at Wiz Interactive and later joined 
 
 Although it's rather obsolete compared to almost all PHP frameworks out there, and most of it is still using PHP 4 code and very heavy libs like PEAR/MDB2 and is hopelessly undocumented, it gets the job done and works all over the place be it Linux or Windows, PHP 4 or 5, MySQL 4 or 5.
 
-As of now all development has been stopped as the code is outrageously out of date and the creators advise not to use any of this as it's being kept on a public repository for historic reasons.
+As of October 2012 all development has been stopped as the code is outrageously out of date and the creators advise not to use any of this as it's being kept on a public repository for historic reasons.
